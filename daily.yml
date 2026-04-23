@@ -1,0 +1,122 @@
+name: Publication YouTube Music Quotidienne
+
+on:
+  schedule:
+    - cron: "0 14 * * *"
+
+  # push trigger supprimé — évite les publications non voulues lors des commits
+  # Pour tester manuellement, utiliser workflow_dispatch avec dry_run: true
+
+  workflow_dispatch:
+    inputs:
+      prompt:
+        description: "Style / thème musical (ex: lofi jazz rainy night, synthwave 80s energetic)"
+        required: false
+        default: ""
+        type: string
+
+      publish_now:
+        description: "Publier immédiatement ? (sinon publie à 18h)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+      dry_run:
+        description: "Mode dry-run (aucun upload, aucune API payante)"
+        required: false
+        default: "false"
+        type: choice
+        options:
+          - "false"
+          - "true"
+
+jobs:
+  publish-music:
+    name: Genere et publie le morceau du jour
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout du repo
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 1
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Installation FFmpeg et polices
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq --no-install-recommends ffmpeg fonts-dejavu-core fonts-liberation
+          ffmpeg -version | head -1
+
+      - name: Installation des dependances Python
+        run: |
+          pip install --upgrade pip --quiet
+          pip install -r requirements.txt --quiet
+
+      - name: Info sur le déclencheur
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "Déclenchement MANUEL"
+            echo "Prompt : ${{ github.event.inputs.prompt }}"
+            echo "Publish now : ${{ github.event.inputs.publish_now }}"
+          else
+            echo "Déclenchement AUTOMATIQUE (cron ou push)"
+          fi
+
+      - name: Lancement du pipeline YouTube Music
+        env:
+          GEMINI_API_KEY:         ${{ secrets.GEMINI_API_KEY }}
+          ELEVENLABS_API_KEY:     ${{ secrets.ELEVENLABS_API_KEY }}
+          YOUTUBE_CLIENT_ID:      ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET:  ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          YOUTUBE_REFRESH_TOKEN:  ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          PEXELS_API_KEY:         ${{ secrets.PEXELS_API_KEY }}
+          MANUAL_PROMPT:          ${{ github.event.inputs.prompt }}
+          PUBLISH_NOW:            ${{ github.event.inputs.publish_now }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          python daily_music.py $DRY_RUN_FLAG
+
+      - name: Upload fichiers DistroKid (MP3 + pochette 3000x3000)
+        if: success() && github.event.inputs.dry_run != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: distro-adrianna-${{ github.run_number }}
+          path: distro/
+          retention-days: 30
+
+      - name: Commit du tracker de morceaux
+        if: success() && github.event.inputs.dry_run != 'true'
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add songs_done.json
+          if git diff --staged --quiet; then
+            echo "Aucun changement"
+          else
+            DATE=$(date -u +"%Y-%m-%d %H:%M UTC")
+            git commit -m "Morceau publie le ${DATE} [skip ci]"
+            git pull --rebase origin main 2>/dev/null || true
+            git push
+          fi
+
+      - name: Notification d'echec
+        if: failure()
+        run: exit 1
+

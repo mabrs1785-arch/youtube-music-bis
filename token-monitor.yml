@@ -1,0 +1,137 @@
+name: ð Monitoring Tokens (YouTube + Suno)
+
+on:
+  # VÃ©rification chaque lundi Ã  8h UTC (10h Paris heure d'Ã©tÃ©)
+  schedule:
+    - cron: "0 8 * * 1"
+
+  # DÃ©clenchement manuel si besoin
+  workflow_dispatch:
+
+jobs:
+  check-tokens:
+    name: VÃ©rifie la validitÃ© des tokens YouTube et Suno
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: ð Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: ð¦ Installation dÃ©pendances
+        run: pip install google-auth google-auth-oauthlib requests --quiet
+
+      - name: ð VÃ©rification des tokens
+        env:
+          YOUTUBE_REFRESH_TOKEN: ${{ secrets.YOUTUBE_REFRESH_TOKEN }}
+          YOUTUBE_CLIENT_ID:     ${{ secrets.YOUTUBE_CLIENT_ID }}
+          YOUTUBE_CLIENT_SECRET: ${{ secrets.YOUTUBE_CLIENT_SECRET }}
+          SUNO_COOKIE:           ${{ secrets.SUNO_COOKIE }}
+          GMAIL_SENDER:          ${{ secrets.GMAIL_SENDER }}
+          GMAIL_APP_PASSWORD:    ${{ secrets.GMAIL_APP_PASSWORD }}
+          NOTIFICATION_EMAIL:    ${{ secrets.NOTIFICATION_EMAIL }}
+        run: |
+          python3 - <<'PYTHON'
+          import os
+          import sys
+          import smtplib
+          import requests
+          from email.mime.multipart import MIMEMultipart
+          from email.mime.text import MIMEText
+
+          import google.auth.exceptions
+          from google.oauth2.credentials import Credentials
+          from google.auth.transport.requests import Request
+
+          SCOPES = ["https://www.googleapis.com/auth/youtube.upload"]
+          errors = []
+
+          def send_alert(subject, body):
+              sender    = os.environ.get("GMAIL_SENDER")
+              password  = os.environ.get("GMAIL_APP_PASSWORD")
+              recipient = os.environ.get("NOTIFICATION_EMAIL")
+              if not all([sender, password, recipient]):
+                  print("Warning: Secrets email manquants -- alerte non envoyee.")
+                  return
+              msg = MIMEMultipart()
+              msg["Subject"] = subject
+              msg["From"]    = sender
+              msg["To"]      = recipient
+              msg.attach(MIMEText(body, "plain"))
+              try:
+                  with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10) as s:
+                      s.login(sender, password)
+                      s.send_message(msg)
+                  print(f"Alerte envoyee -> {recipient}")
+              except Exception as e:
+                  print(f"Impossible d'envoyer l'alerte : {e}")
+
+          # ââ Check 1 : YouTube Token ââââââââââââââââââââââââââââââ
+          yt_required = ["YOUTUBE_REFRESH_TOKEN", "YOUTUBE_CLIENT_ID", "YOUTUBE_CLIENT_SECRET"]
+          yt_missing  = [k for k in yt_required if not os.environ.get(k)]
+
+          if yt_missing:
+              errors.append(f"Secrets YouTube manquants : {', '.join(yt_missing)}")
+          else:
+              print("Test du YOUTUBE_REFRESH_TOKEN...")
+              try:
+                  creds = Credentials(
+                      token=None,
+                      refresh_token=os.environ["YOUTUBE_REFRESH_TOKEN"],
+                      token_uri="https://oauth2.googleapis.com/token",
+                      client_id=os.environ["YOUTUBE_CLIENT_ID"],
+                      client_secret=os.environ["YOUTUBE_CLIENT_SECRET"],
+                      scopes=SCOPES,
+                  )
+                  creds.refresh(Request())
+                  print("OK YouTube token valide.")
+              except google.auth.exceptions.RefreshError as e:
+                  errors.append(f"YouTube token revoque : {e}")
+              except Exception as e:
+                  errors.append(f"YouTube erreur inattendue : {e}")
+
+          # ââ Check 2 : Suno Cookie âââââââââââââââââââââââââââââââ
+          suno_cookie = os.environ.get("SUNO_COOKIE", "")
+          if not suno_cookie:
+              errors.append("SUNO_COOKIE manquant")
+          else:
+              print("Test du SUNO_COOKIE...")
+              try:
+                  resp = requests.get(
+                      "https://clerk.suno.com/v1/client?_clerk_js_version=4.73.4",
+                      headers={
+                          "Cookie": suno_cookie,
+                          "User-Agent": "Mozilla/5.0",
+                      },
+                      timeout=15,
+                  )
+                  if resp.status_code == 200:
+                      data = resp.json()
+                      sessions = data.get("response", {}).get("sessions", [])
+                      if sessions:
+                          print("OK Suno cookie valide.")
+                      else:
+                          errors.append("Suno cookie expire â session vide. Se reconnecter sur suno.com.")
+                  else:
+                      errors.append(f"Suno cookie invalide (HTTP {resp.status_code})")
+              except Exception as e:
+                  errors.append(f"Suno erreur : {e}")
+
+          # ââ RÃ©sultat ââââââââââââââââââââââââââââââââââââââââââââ
+          if errors:
+              msg = "\n".join(f"  - {e}" for e in errors)
+              print(f"\nERREURS DETECTEES :\n{msg}")
+              send_alert(
+                  "YouTube Music Bot -- Probleme(s) de token",
+                  f"Problemes detectes :\n{msg}\n\n"
+                  "Actions :\n"
+                  "  - YouTube : relancer get_refresh_token.py\n"
+                  "  - Suno : se reconnecter sur suno.com et mettre a jour SUNO_COOKIE\n"
+              )
+              sys.exit(1)
+          else:
+              print("\nTous les tokens sont valides. Aucune action requise.")
+              sys.exit(0)
+          PYTHON

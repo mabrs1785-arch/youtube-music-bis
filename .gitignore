@@ -1,0 +1,15 @@
+client_secrets.json
+tokens.local.json
+*.env
+.env.*
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+/tmp/
+*.mp4
+*.mp3
+*.wav
+*.jpg
+*.png
+!thumbnail_example.jpg

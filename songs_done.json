@@ -1,0 +1,30 @@
+{
+  "done": [
+    "voyage-astral",
+    "courir-sous-la-pluie",
+    "rave-cathedrale",
+    "energie",
+    "une-deesse-du-sexe",
+    "modern-commercial-dance-pop-edm-emotional-nostalgic-vibe",
+    "rock-psychyque",
+    "dark-techno-berlin-underground-minimal-hypnotic-repeated-rythmic-female-vocale-synthetique-wave",
+    "electro-house-emotional-nostalgic-club",
+    "cozy-lofi-jazz-rain",
+    "edm-electro-house-festival-anthem",
+    "euphoric-electro-house-female-vocals",
+    "euphoric-electro-house-female-vocals"
+  ],
+  "count": 13,
+  "last_song": {
+    "titre": "Stars Align",
+    "url": "https://youtube.com/watch?v=tjgZhU5eKeo",
+    "genre": "electro house, dance pop, euphoric, female vocals, uplifting electronic",
+    "published": "2026-04-23T16:03:51.495613+00:00",
+    "manual": false,
+    "publish_now": false,
+    "distro_files": [
+      "2026-04-23_euphoric-electro-house-female-vocals.mp3",
+      "2026-04-23_euphoric-electro-house-female-vocals_cover.jpg"
+    ]
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "campaigns": [
+    {
+      "start": "2026-04-24",
+      "end": "2026-04-30",
+      "style_prompt": "upbeat electronic dance pop with soaring synth chords and a driving rhythm. Features a powerful female soprano belting an emotional chorus with vibrato and doubled harmonies. Warm bright energy, made to make people dance and feel euphoric.",
+      "description": "Lancement — David Guetta x Ariana Grande Vibes"
+    },
+    {
+      "start": "2026-05-01",
+      "end": "2026-05-10",
+      "style_prompt": "emotional electronic pop ballad that builds into a massive uplifting drop. Warm piano intro, lush string pads, then soaring synth lead. Powerful female voice with emotional vibrato and big harmonies. Euphoric and catchy, radio-ready dance pop.",
+      "description": "Semaine Ballade Electro — Piano Drop Guetta Style"
+    },
+    {
+      "start": "2026-05-11",
+      "end": "2026-05-20",
+      "style_prompt": "high-energy electronic dance pop with punchy driving beat, bright catchy synth melody, and a powerful female voice delivering a hooky sing-along chorus. Upbeat, bold, commercial pop energy. Summer dancefloor feeling.",
+      "description": "Semaine Summer Dancefloor — Ariana x Jazzy"
+    },
+    {
+      "start": "2026-05-21",
+      "end": "2026-05-31",
+      "style_prompt": "dark yet emotional electronic pop with deep warm bass, cinematic build-up, and a soaring female soprano cutting through with passion. Tension then release into a euphoric chorus. Sophisticated club-ready sound.",
+      "description": "Semaine Dark Emotional — Future Pop Guetta MORTEN"
+    },
+    {
+      "start": "2026-06-01",
+      "end": "2026-06-10",
+      "style_prompt": "uplifting feel-good electronic pop with tropical warm synths, bright catchy female vocals full of energy and positivity. Playful melody, bouncy beat, summer anthem energy. Radio-friendly and infectious.",
+      "description": "Semaine Tropical Pop — Jazzy Flavour Summer Hit"
+    },
+    {
+      "start": "2026-06-11",
+      "end": "2026-06-20",
+      "style_prompt": "powerful emotional pop dance anthem with sweeping orchestral synths, dramatic build-up and a massive chorus drop. Soprano female voice with huge range and passionate delivery. Epic and cinematic stadium feel.",
+      "description": "Semaine Stadium Anthem — Epic Chorus Ariana Style"
+    },
+    {
+      "start": "2026-06-21",
+      "end": "2026-06-30",
+      "style_prompt": "groovy electronic pop with funky bass line, warm synth chords, and a smooth catchy female voice blending pop and soul. Upbeat summer groove, feel-good energy, dancefloor ready with a hooky memorable chorus.",
+      "description": "Semaine Groove Electro — Soul Pop Jazzy Vibes"
+    },
+    {
+      "start": "2026-07-01",
+      "end": "2026-07-15",
+      "style_prompt": "euphoric electronic dance pop with bright plucked synths, driving energetic beat, and soaring female vocals building to an emotional sing-along chorus. Uplifting, warm, sun-soaked summer energy. Made to move crowds.",
+      "description": "Mi-Ete — Euphoric Festival Pop Guetta x Jazzy"
+    },
+    {
+      "start": "2026-07-16",
+      "end": "2026-07-31",
+      "style_prompt": "intimate yet powerful electronic pop with soft warm intro building into a bold emotional chorus. Female voice starts delicate and blossoms into full passionate belting. Emotional vulnerability meets dance energy.",
+      "description": "Fin Juillet — Intimate Pop Power Ariana Style"
+    },
+    {
+      "start": "2026-08-01",
+      "end": "2026-08-15",
+      "style_prompt": "catchy electronic pop dance with a bold hooky chorus, punchy synth lead, and a charismatic female vocalist with attitude and sass. Fun, youthful, bright energy. Chart-ready commercial pop with a modern electronic edge.",
+      "description": "Debut Aout — Bold Commercial Pop Dance"
+    },
+    {
+      "start": "2026-08-16",
+      "end": "2026-08-31",
+      "style_prompt": "nostalgic yet modern electronic pop with warm retro synths, emotional melancholy mixed with euphoric chorus. Female vocals convey longing and strength simultaneously. Late summer feeling, bittersweet and beautiful.",
+      "description": "Fin Ete — Nostalgic Bittersweet Pop Electro"
+    }
+  ]
+}

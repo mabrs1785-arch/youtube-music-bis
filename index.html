@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Music Lab — Générer une track</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Outfit:wght@300;400;600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg: #07040f; --bg2: #0f0820; --panel: #130d24; --border: #2a1f4a;
+      --accent: #8b2cf5; --accent2: #00e5ff; --accent3: #ff2d78;
+      --text: #f0eaff; --muted: #7a6e99; --success: #00e096; --error: #ff4d6d;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Outfit', sans-serif; background: var(--bg); color: var(--text);
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; padding: 2rem 1rem; overflow-x: hidden;
+    }
+    body::before {
+      content: ''; position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(139,44,245,0.04) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(139,44,245,0.04) 1px, transparent 1px);
+      background-size: 40px 40px; z-index: 0; animation: gridShift 20s linear infinite;
+    }
+    @keyframes gridShift { 0% { background-position: 0 0; } 100% { background-position: 40px 40px; } }
+    .blob { position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.15; z-index: 0;
+            pointer-events: none; animation: blobPulse 8s ease-in-out infinite alternate; }
+    .blob-1 { width: 500px; height: 500px; background: var(--accent); top: -150px; left: -150px; }
+    .blob-2 { width: 400px; height: 400px; background: var(--accent2); bottom: -100px; right: -100px; animation-delay: -4s; }
+    .blob-3 { width: 300px; height: 300px; background: var(--accent3); top: 40%; left: 60%; animation-delay: -2s; }
+    @keyframes blobPulse { from { transform: scale(1); opacity: 0.12; } to { transform: scale(1.15); opacity: 0.2; } }
+    .container { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+    .header { text-align: center; margin-bottom: 2.5rem; }
+    .logo { display: inline-flex; align-items: center; gap: 0.5rem; font-family: 'Space Mono', monospace;
+            font-size: 0.75rem; color: var(--accent2); letter-spacing: 0.2em; text-transform: uppercase;
+            margin-bottom: 1rem; border: 1px solid rgba(0,229,255,0.2); padding: 0.4rem 1rem; border-radius: 2px; }
+    .logo-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent2);
+                animation: logoBlink 2s ease-in-out infinite; }
+    @keyframes logoBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.2; } }
+    h1 { font-size: clamp(2rem, 6vw, 3.2rem); font-weight: 900; line-height: 1.05; letter-spacing: -0.02em; }
+    h1 .line1 { display: block; color: var(--text); }
+    h1 .line2 { display: block; background: linear-gradient(90deg, var(--accent), var(--accent2));
+                -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .subtitle { margin-top: 0.75rem; color: var(--muted); font-size: 0.95rem; font-weight: 300; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 16px;
+            padding: 2rem; position: relative; overflow: hidden; }
+    .card::before { content: ''; position: absolute; inset: 0;
+                    background: linear-gradient(135deg, rgba(139,44,245,0.06) 0%, transparent 60%);
+                    pointer-events: none; }
+    .field-label { display: flex; align-items: center; gap: 0.5rem; font-family: 'Space Mono', monospace;
+                   font-size: 0.7rem; color: var(--accent); letter-spacing: 0.15em; text-transform: uppercase;
+                   margin-bottom: 0.6rem; }
+    .field-label .num { width: 18px; height: 18px; border: 1px solid var(--accent); border-radius: 3px;
+                        display: flex; align-items: center; justify-content: center; font-size: 0.65rem; }
+    textarea { width: 100%; background: rgba(0,0,0,0.4); border: 1px solid var(--border); border-radius: 10px;
+               color: var(--text); font-family: 'Outfit', sans-serif; font-size: 1rem; font-weight: 300;
+               padding: 1rem 1.1rem; resize: none; height: 120px; outline: none;
+               transition: border-color 0.2s, box-shadow 0.2s; line-height: 1.6; }
+    textarea::placeholder { color: var(--muted); font-style: italic; }
+    textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,44,245,0.15); }
+    .presets { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; margin-bottom: 1.5rem; }
+    .preset-btn { background: transparent; border: 1px solid var(--border); border-radius: 20px;
+                  color: var(--muted); font-family: 'Outfit', sans-serif; font-size: 0.78rem;
+                  padding: 0.3rem 0.85rem; cursor: pointer; transition: all 0.15s; }
+    .preset-btn:hover { border-color: var(--accent); color: var(--accent); background: rgba(139,44,245,0.08); }
+    .options { display: flex; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
+    .toggle-card { flex: 1; min-width: 200px; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+                   border-radius: 10px; padding: 0.9rem 1rem; display: flex; align-items: center;
+                   justify-content: space-between; cursor: pointer; transition: border-color 0.2s, background 0.2s;
+                   user-select: none; }
+    .toggle-card:hover { border-color: var(--accent); }
+    .toggle-card.active { border-color: var(--accent); background: rgba(139,44,245,0.1); }
+    .toggle-card.danger.active { border-color: var(--accent3); background: rgba(255,45,120,0.08); }
+    .toggle-info strong { display: block; font-size: 0.9rem; font-weight: 600; margin-bottom: 0.1rem; }
+    .toggle-info span { font-size: 0.75rem; color: var(--muted); font-weight: 300; }
+    .switch { width: 40px; height: 22px; background: var(--border); border-radius: 11px;
+              position: relative; transition: background 0.2s; flex-shrink: 0; }
+    .toggle-card.active .switch { background: var(--accent); }
+    .toggle-card.danger.active .switch { background: var(--accent3); }
+    .switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white;
+                     border-radius: 50%; top: 3px; left: 3px; transition: transform 0.2s; }
+    .toggle-card.active .switch::after { transform: translateX(18px); }
+    .divider { height: 1px; background: linear-gradient(90deg, transparent, var(--border), transparent); margin: 1.5rem 0; }
+    .btn-submit { width: 100%; background: linear-gradient(135deg, var(--accent), #6b00e6); border: none;
+                  border-radius: 12px; color: white; font-family: 'Outfit', sans-serif; font-size: 1.05rem;
+                  font-weight: 700; letter-spacing: 0.03em; padding: 1rem; cursor: pointer;
+                  position: relative; overflow: hidden; transition: transform 0.15s, opacity 0.15s; }
+    .btn-submit::before { content: ''; position: absolute; inset: 0;
+                          background: linear-gradient(135deg, rgba(255,255,255,0.1), transparent); }
+    .btn-submit:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 30px rgba(139,44,245,0.4); }
+    .btn-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-inner { display: flex; align-items: center; justify-content: center; gap: 0.6rem; }
+    .spinner { width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white;
+               border-radius: 50%; animation: spin 0.7s linear infinite; display: none; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .status { margin-top: 1.25rem; border-radius: 10px; padding: 1rem 1.1rem; font-size: 0.9rem;
+              display: none; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+    .status.success { display: flex; align-items: flex-start; gap: 0.6rem;
+                      background: rgba(0,224,150,0.08); border: 1px solid rgba(0,224,150,0.25); color: var(--success); }
+    .status.error   { display: flex; align-items: flex-start; gap: 0.6rem;
+                      background: rgba(255,77,109,0.08); border: 1px solid rgba(255,77,109,0.25); color: var(--error); }
+    .footer-info { margin-top: 1.25rem; font-family: 'Space Mono', monospace; font-size: 0.65rem;
+                   color: var(--muted); text-align: center; letter-spacing: 0.08em; }
+    .eq { display: flex; align-items: flex-end; gap: 2px; height: 20px; margin-left: 0.4rem; }
+    .eq-bar { width: 3px; background: var(--accent2); border-radius: 1px; animation: eqAnim 0.8s ease-in-out infinite alternate; }
+    .eq-bar:nth-child(1){animation-delay:0s} .eq-bar:nth-child(2){animation-delay:.15s}
+    .eq-bar:nth-child(3){animation-delay:.3s} .eq-bar:nth-child(4){animation-delay:.45s}
+    .eq-bar:nth-child(5){animation-delay:.6s}
+    @keyframes eqAnim { from { height: 4px; opacity: 0.4; } to { height: 18px; opacity: 1; } }
+  </style>
+</head>
+<body>
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <span class="logo-dot"></span>
+        AI Music Lab
+        <div class="eq">
+          <div class="eq-bar"></div><div class="eq-bar"></div><div class="eq-bar"></div>
+          <div class="eq-bar"></div><div class="eq-bar"></div>
+        </div>
+      </div>
+      <h1><span class="line1">Generate a</span><span class="line2">Music Video</span></h1>
+      <p class="subtitle">Décris un style musical et lance le pipeline en un clic</p>
+    </div>
+    <div class="card">
+      <div class="field-label"><div class="num">01</div>Ton prompt musical</div>
+      <textarea id="prompt" placeholder="ex: lofi hip hop, jazz piano, late night rain, melancholic vibes…" maxlength="300"></textarea>
+      <div class="presets">
+        <button class="preset-btn" onclick="setPreset('lo-fi hip hop, jazz samples, rainy night, cozy piano')">☕ Lo-Fi Jazz</button>
+        <button class="preset-btn" onclick="setPreset('afrobeats, amapiano, tropical percussion, summer energy')">🌍 Afrobeats</button>
+        <button class="preset-btn" onclick="setPreset('dark techno, Berlin underground, minimal, hypnotic')">🖤 Techno</button>
+        <button class="preset-btn" onclick="setPreset('synthwave 80s, neon lights, retro futuristic, driving')">🌆 Synthwave</button>
+        <button class="preset-btn" onclick="setPreset('acoustic guitar, folk pop, emotional storytelling, campfire')">🎸 Folk Pop</button>
+        <button class="preset-btn" onclick="setPreset('trap beats, 808 bass, dark melody, aggressive energy')">🔥 Dark Trap</button>
+      </div>
+      <div class="divider"></div>
+      <div class="field-label"><div class="num">02</div>Options</div>
+      <div class="options">
+        <div class="toggle-card" id="toggle-now" onclick="toggleOption('now')">
+          <div class="toggle-info">
+            <strong>⚡ Publier maintenant</strong>
+            <span>Dans ~3 min (pas à 18h)</span>
+          </div>
+          <div class="switch"></div>
+        </div>
+        <div class="toggle-card danger" id="toggle-dry" onclick="toggleOption('dry')">
+          <div class="toggle-info">
+            <strong>🧪 Dry-run</strong>
+            <span>Test sans upload</span>
+          </div>
+          <div class="switch"></div>
+        </div>
+      </div>
+      <button class="btn-submit" id="btn" onclick="launch()">
+        <div class="btn-inner">
+          <div class="spinner" id="spinner"></div>
+          <span id="btn-text">🚀 Lancer le pipeline</span>
+        </div>
+      </button>
+      <div class="status" id="status">
+        <span id="status-icon"></span>
+        <span id="status-text"></span>
+      </div>
+      <div class="footer-info" id="footer-info">Pipeline GitHub Actions → Gemini → Suno → YouTube</div>
+    </div>
+  </div>
+  <script>
+    const state = { now: false, dry: false };
+    function toggleOption(key) {
+      state[key] = !state[key];
+      document.getElementById(`toggle-${key}`).classList.toggle('active', state[key]);
+    }
+    function setPreset(text) {
+      document.getElementById('prompt').value = text;
+      document.getElementById('prompt').focus();
+    }
+    function showStatus(type, text) {
+      const el = document.getElementById('status');
+      document.getElementById('status-icon').textContent = type === 'success' ? '✓' : '✕';
+      document.getElementById('status-text').textContent = text;
+      el.className = `status ${type}`;
+    }
+    async function launch() {
+      const prompt  = document.getElementById('prompt').value.trim();
+      const btn     = document.getElementById('btn');
+      const spinner = document.getElementById('spinner');
+      const btnText = document.getElementById('btn-text');
+      const footer  = document.getElementById('footer-info');
+      document.getElementById('status').className = 'status';
+      if (!prompt) { showStatus('error', 'Écris un style musical avant de lancer !'); return; }
+      btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = 'Pipeline en cours…';
+      footer.textContent = 'Connexion à GitHub Actions…';
+      try {
+        const res = await fetch('/.netlify/functions/trigger', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ prompt, publish_now: state.now, dry_run: state.dry }),
+        });
+        const data = await res.json();
+        if (data.success) {
+          showStatus('success', state.dry ? 'Pipeline dry-run lancé ✓' :
+            state.now ? 'Lancé ! Vidéo publiée dans ~3 min ⚡' : 'Lancé ! Vidéo publiée à 18h 🎵');
+          footer.textContent = 'Durée estimée : 5–10 min • Voir GitHub Actions';
+        } else {
+          showStatus('error', data.error || `Erreur ${res.status}`);
+          footer.textContent = 'Vérifier les secrets Netlify';
+        }
+      } catch (err) {
+        showStatus('error', `Erreur réseau : ${err.message}`);
+      } finally {
+        btn.disabled = false; spinner.style.display = 'none'; btnText.textContent = '🚀 Lancer le pipeline';
+      }
+    }
+    document.getElementById('prompt').addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') launch();
+    });
+  </script>
+</body>
+</html>

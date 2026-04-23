@@ -1,0 +1,26 @@
+# ──────────────────────────────
+# Dépendances Python – YouTube Music Bot
+# Python 3.11+
+# ──────────────────────────────
+
+# IA / LLM (concept de chanson)
+google-genai
+
+# HTTP (Replicate API + téléchargements)
+requests>=2.31.0
+
+# Image / Pochette d'album + Miniature
+Pillow>=10.4.0
+
+# YouTube Data API v3
+google-api-python-client>=2.140.0
+google-auth>=2.34.0
+google-auth-httplib2>=0.2.0
+google-auth-oauthlib>=1.2.0
+
+# ──────────────────────────────
+# Génération musicale : ElevenLabs Music API (officielle, synchrone)
+# ELEVENLABS_API_KEY : clé API ElevenLabs → https://elevenlabs.io/app/settings/api-keys
+# Endpoint : POST https://api.elevenlabs.io/v1/music
+# Durée : jusqu'à 5 minutes par morceau
+# ──────────────────────────────
